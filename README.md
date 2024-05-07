@@ -8,7 +8,7 @@ Steps to set up and run the demo:
 python3 -m venv docs_demo
 ```
 ```
-. rag_demo/bin/activate
+. docs_demo/bin/activate
 ```
 ```
 pip install git+https://github.com/mminichino/cb-docs-rag-demo
