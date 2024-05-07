@@ -30,16 +30,16 @@ def parse_args():
 
 def main():
     options = parse_args()
-    if "auth" not in st.session_state:
-        st.session_state.auth = False
 
     st.set_page_config(
-        page_title="Chat with docs.couchbase.com",
-        page_icon="ð¤",
+        page_title="DocChat",
         layout="centered",
         initial_sidebar_state="auto",
         menu_items=None,
     )
+
+    if "auth" not in st.session_state:
+        st.session_state.auth = False
 
     openai_api_key = options.apikey if options.apikey else os.environ.get("OPENAI_API_KEY")
 
@@ -73,6 +73,9 @@ def main():
                 st.rerun()
 
     if st.session_state.auth:
+        st.title("Couchbase Chatbot")
+        use_vector = st.checkbox("Use Vector Index", value=True)
+
         os.environ["OPENAI_API_KEY"] = st.session_state.key
 
         keyspace = f"{st.session_state.bucket}.{st.session_state.scope}.{st.session_state.collection}"
@@ -108,14 +111,24 @@ def main():
                 | StrOutputParser()
         )
 
+        llm_template = """You are an assistant for question-answering tasks. Use one or two paragraphs to answer the question.
+                Question: {question}"""
+
+        llm_chat_prompt = ChatPromptTemplate.from_template(llm_template)
+
+        llm_chain = (
+                {"question": RunnablePassthrough()}
+                | llm_chat_prompt
+                | llm
+                | StrOutputParser()
+        )
+
         couchbase_logo = (
             "https://raw.githubusercontent.com/mminichino/cb-docs-rag-demo/main/doc/couchbase.png"
         )
         openai_logo = (
             "https://raw.githubusercontent.com/mminichino/cb-docs-rag-demo/main/doc/openapi.png"
         )
-
-        st.title("Chat with Couchbase Docs")
 
         with st.sidebar:
             st.write("View the code [here](https://github.com/mminichino/cb-docs-rag-demo/blob/main/cbdocragdemo/demo_run.py)")
@@ -160,24 +173,40 @@ def main():
                 {"role": "user", "content": question, "avatar": openai_logo}
             )
 
-            # Add placeholder for streaming the response
-            with st.chat_message("assistant", avatar=couchbase_logo):
-                message_placeholder = st.empty()
+            if use_vector:
+                with st.chat_message("assistant", avatar=couchbase_logo):
+                    message_placeholder = st.empty()
 
-            # stream the response from the RAG
-            rag_response = ""
-            for chunk in rag_chain.stream(question):
-                rag_response += chunk
-                message_placeholder.markdown(rag_response + "â")
+                rag_response = ""
+                for chunk in rag_chain.stream(question):
+                    rag_response += chunk
+                    message_placeholder.markdown(rag_response)
 
-            message_placeholder.markdown(rag_response)
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": rag_response,
-                    "avatar": couchbase_logo,
-                }
-            )
+                message_placeholder.markdown(rag_response)
+                st.session_state.messages.append(
+                    {
+                        "role": "assistant",
+                        "content": rag_response,
+                        "avatar": couchbase_logo,
+                    }
+                )
+            else:
+                with st.chat_message("ai", avatar=openai_logo):
+                    message_placeholder = st.empty()
+
+                rag_response = ""
+                for chunk in llm_chain.stream(question):
+                    rag_response += chunk
+                    message_placeholder.markdown(rag_response)
+
+                message_placeholder.markdown(rag_response)
+                st.session_state.messages.append(
+                    {
+                        "role": "ai",
+                        "content": rag_response,
+                        "avatar": openai_logo,
+                    }
+                )
 
 
 if __name__ == '__main__':
