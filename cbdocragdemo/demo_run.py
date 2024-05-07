@@ -108,12 +108,11 @@ def main():
                 | StrOutputParser()
         )
 
-        # Frontend
         couchbase_logo = (
-            "https://raw.githubusercontent.com/mminichino/cb-rag-langchain-demo/main/doc/couchbase.png"
+            "https://raw.githubusercontent.com/mminichino/cb-docs-rag-demo/main/doc/couchbase.png"
         )
         openai_logo = (
-            "https://raw.githubusercontent.com/mminichino/cb-rag-langchain-demo/main/doc/openapi.png"
+            "https://raw.githubusercontent.com/mminichino/cb-docs-rag-demo/main/doc/openapi.png"
         )
 
         st.title("Chat with Couchbase Docs")
