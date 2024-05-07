@@ -101,18 +101,29 @@ def main():
         st.title("Chat with Couchbase Docs")
 
         with st.sidebar:
-            # View Code
-            if st.checkbox("View Code"):
-                st.write(
-                    "View the code here: [Github](https://github.com/mminichino/cb-rag-langchain-demo/blob/main/cbragdemo/chat_with_pdf.py)"
-                )
+            st.write("View the code [here](https://github.com/mminichino/cb-rag-langchain-demo/blob/main/cbragdemo/chat_with_pdf.py)")
+
+            with st.container():
+                col1, col2 = st.columns([0.25, 0.75], gap="small")
+
+                col1.write(f"Version:")
+                col2.write(op.sw_version)
+
+                col1.write(f"Platform:")
+                col2.write(op.os_platform)
+
+                col1.write(f"Index:")
+                col2.write(st.session_state.index)
+
+                col1.write(f"Vectors:")
+                col2.write(f"{op.search_index_count(st.session_state.index):,}")
 
         if "messages" not in st.session_state:
             st.session_state.messages = []
             st.session_state.messages.append(
                 {
                     "role": "assistant",
-                    "content": "I'm a chatbot who can chat with Couchbase documentation. How can I help you?",
+                    "content": "Welcome to Couchbase. How can I help you?",
                     "avatar": openai_logo,
                 }
             )
