@@ -4,6 +4,7 @@
 from langchain_community.vectorstores import CouchbaseVectorStore
 from langchain_openai import OpenAIEmbeddings
 import os
+import argparse
 import streamlit as st
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -13,7 +14,22 @@ from cbcmgr.cb_operation_s import CBOperation
 from cbcmgr.exceptions import NotAuthorized
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-u', '--user', action='store', help="User Name", default="Administrator")
+    parser.add_argument('-p', '--password', action='store', help="User Password")
+    parser.add_argument('-h', '--host', action='store', help="Cluster Hostname")
+    parser.add_argument('-b', '--bucket', action='store', help="Bucket", default="docdemo")
+    parser.add_argument('-s', '--scope', action='store', help="Scope", default="data")
+    parser.add_argument('-c', '--collection', action='store', help="Collection", default="vectors")
+    parser.add_argument('-i', '--index', action='store', help="Index Name", default="docdemo_vector_index")
+    parser.add_argument('-K', '--apikey', action='store', help="OpenAI API Key")
+    options = parser.parse_args()
+    return options
+
+
 def main():
+    options = parse_args()
     if "auth" not in st.session_state:
         st.session_state.auth = False
 
@@ -25,15 +41,17 @@ def main():
         menu_items=None,
     )
 
+    openai_api_key = options.apikey if options.apikey else os.environ.get("OPENAI_API_KEY")
+
     if not st.session_state.auth:
-        host_name = st.text_input("Couchbase Server Hostname", "127.0.0.1")
-        user_name = st.text_input("Username", "Administrator")
-        user_password = st.text_input("Enter password", type="password")
-        open_api_key = st.text_input("Enter OpenAI API Key", type="password")
-        bucket_name = st.text_input("Bucket", "docdemo")
-        scope_name = st.text_input("Scope", "data")
-        collection_name = st.text_input("Collection", "vectors")
-        index_name = st.text_input("Index Name", "docdemo_vector_index")
+        host_name = st.text_input("Couchbase Server Hostname", options.host, autocomplete="on")
+        user_name = st.text_input("Username", options.user)
+        user_password = st.text_input("Enter password", options.password, type="password")
+        open_api_key = st.text_input("Enter OpenAI API Key", openai_api_key, type="password")
+        bucket_name = st.text_input("Bucket", options.bucket)
+        scope_name = st.text_input("Scope", options.scope)
+        collection_name = st.text_input("Collection", options.collection)
+        index_name = st.text_input("Index Name", options.index)
         pwd_submit = st.button("Start Chat")
 
         if pwd_submit:
@@ -101,7 +119,7 @@ def main():
         st.title("Chat with Couchbase Docs")
 
         with st.sidebar:
-            st.write("View the code [here](https://github.com/mminichino/cb-rag-langchain-demo/blob/main/cbragdemo/chat_with_pdf.py)")
+            st.write("View the code [here](https://github.com/mminichino/cb-docs-rag-demo/blob/main/cbdocragdemo/demo_run.py)")
 
             with st.container():
                 col1, col2 = st.columns([0.25, 0.75], gap="small")
